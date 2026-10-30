@@ -1,0 +1,14 @@
+{
+  "name": "rook-demo-travel-planner",
+  "private": true,
+  "type": "module",
+  "description": "travel-planner: a multi-agent trip planner over five MCP servers (flights, stays, destinations, weather, bookings)",
+  "scripts": {
+    "mcp:flights": "node mcp/flights-server.mjs",
+    "mcp:stays": "node mcp/stays-server.mjs",
+    "mcp:destinations": "node mcp/destinations-server.mjs",
+    "mcp:weather": "node mcp/weather-server.mjs",
+    "mcp:bookings": "node mcp/bookings-server.mjs",
+    "test": "python3 -m unittest -v test_travel_planner"
+  }
+}

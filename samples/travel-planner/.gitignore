@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.env
+.planner-sessions/
+.testmuai/
+.bookings/

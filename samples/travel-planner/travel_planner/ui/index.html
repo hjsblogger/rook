@@ -1,0 +1,1111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Travel Planner</title>
+<style>
+  :root {
+    --bg: #f7f5f0; --surface: #ffffff; --ink: #1b2430; --muted: #66707d; --line: #e6e2d9; --soft: #f1eee7;
+    --brand: #0e6f6a; --brand-2: #0b5551; --brand-ink: #ffffff; --brand-soft: #e3f1ef;
+    --sun: #f2a33a; --coral: #e8664f; --sky: #3f7fbf;
+    --ok: #1d7a43; --ok-soft: #e4f3ea; --warn: #9a5b00; --warn-soft: #fbf0dc; --bad: #b42318; --bad-soft: #fbe7e4;
+    --code: #f3f1ec; --shadow: 0 1px 2px rgba(20, 30, 40, .06), 0 6px 20px rgba(20, 30, 40, .06);
+    --flights: #3f7fbf; --stays: #8a4fb8; --activities: #c46a22; --weather: #1f8aa8; --booking: #b23a5d; --writer: #4d7a2a; --planner: #0e6f6a;
+    --hero-a: #0e6f6a; --hero-b: #1f8aa8; --hero-c: #f2a33a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12161b; --surface: #1a2027; --ink: #e9e6df; --muted: #9aa3ad; --line: #2b333c; --soft: #222931;
+      --brand: #46b3aa; --brand-2: #5cc4bb; --brand-ink: #0b1514; --brand-soft: #1b2e2c;
+      --ok: #5cc27e; --ok-soft: #17291f; --warn: #e3a34a; --warn-soft: #2d2415; --bad: #f07a6e; --bad-soft: #2f1c1a;
+      --code: #20262d; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+      --flights: #7eaee6; --stays: #c08ee6; --activities: #eba066; --weather: #6ccbe8; --booking: #ec8aa8; --writer: #94c46c; --planner: #46b3aa;
+      --hero-a: #0b4f4b; --hero-b: #155d72; --hero-c: #8a5a1c;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+  @media (max-width: 640px) { .wrap { padding: 0 16px; } }
+  .muted { color: var(--muted); }
+  svg.i { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+
+  /* nav */
+  nav { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; align-items: center; gap: 12px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 750; font-size: 19px; letter-spacing: -.01em; color: var(--ink); text-decoration: none; }
+  .brand .logo { width: 30px; height: 30px; border-radius: 9px; background: linear-gradient(135deg, var(--hero-a), var(--hero-b)); display: grid; place-items: center; color: #fff; }
+  .brand small { font-weight: 500; font-size: 12px; color: var(--muted); }
+  nav .spacer { flex: 1; }
+  .navbtn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 7px 14px; font-size: 14px; }
+  .navbtn:hover { border-color: var(--brand); }
+  .badge { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--brand); color: var(--brand-ink); font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+  .badge.live { animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  @media (prefers-reduced-motion: reduce) { .badge.live, .dot.live { animation: none; } html { scroll-behavior: auto; } }
+  @media (max-width: 560px) { .brand small, .navbtn .lbl { display: none; } }
+
+  /* hero + search */
+  .hero { background: radial-gradient(1200px 400px at 85% -10%, color-mix(in srgb, var(--hero-c) 55%, transparent), transparent 60%), linear-gradient(135deg, var(--hero-a), var(--hero-b)); color: #fff; padding: 44px 0 72px; }
+  .hero h1 { font-size: clamp(28px, 4.2vw, 44px); line-height: 1.1; margin: 0 0 8px; letter-spacing: -.02em; }
+  .hero p { margin: 0; opacity: .9; font-size: 17px; max-width: 640px; }
+  .search { background: var(--surface); color: var(--ink); border-radius: 18px; box-shadow: 0 10px 40px rgba(0, 0, 0, .18); padding: 18px; margin-top: -48px; position: relative; z-index: 2; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tab { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font-weight: 600; color: var(--muted); }
+  .tab[aria-selected="true"] { background: var(--brand-soft); color: var(--brand); }
+  .grid { display: grid; gap: 10px; }
+  .row4 { grid-template-columns: 1.2fr 1.2fr 1fr 1fr; }
+  .row3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 860px) { .row4 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .row4, .row3 { grid-template-columns: 1fr; } }
+  .field { display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; background: var(--surface); min-width: 0; }
+  .field:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .field label, .lab { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .field input, .field select, .field textarea { border: 0; outline: 0; background: transparent; padding: 0; width: 100%; min-width: 0; font-size: 15px; }
+  .field textarea { resize: vertical; min-height: 64px; }
+  .legs { display: flex; flex-direction: column; gap: 8px; }
+  .leg { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 8px; align-items: stretch; }
+  @media (max-width: 640px) { .leg { grid-template-columns: 1fr 1fr; } }
+  .iconbtn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 0 10px; color: var(--muted); }
+  .linkbtn { border: 0; background: none; color: var(--brand); font-weight: 600; padding: 4px 0; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin-top: 12px; }
+  .chipset { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; }
+  .chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+  .check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+  .check input { accent-color: var(--brand); width: 16px; height: 16px; }
+  .cta { border: 0; background: var(--coral); color: #fff; border-radius: 12px; padding: 12px 22px; font-weight: 700; font-size: 16px; display: inline-flex; gap: 8px; align-items: center; justify-content: center; }
+  .cta:hover { filter: brightness(1.05); }
+  .cta:disabled { opacity: .6; cursor: progress; }
+  .cta.brand { background: var(--brand); color: var(--brand-ink); }
+  .cta.danger { background: transparent; color: var(--bad); border: 1.5px solid var(--bad); }
+  .searchfoot { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 14px; }
+  .error { color: var(--bad); font-size: 14px; }
+  .ideas { margin: 18px 0 8px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .idea { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 12px; font-size: 13px; text-align: left; box-shadow: var(--shadow); max-width: 100%; }
+  .idea b { display: block; font-size: 14px; }
+
+  /* sections & cards */
+  section.block { margin: 28px 0; }
+  h2.sec { font-size: 20px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; letter-spacing: -.01em; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; min-width: 0; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+  .aside { position: sticky; top: 76px; display: flex; flex-direction: column; gap: 16px; }
+  @media (max-width: 980px) { .aside { position: static; } }
+
+  /* progress */
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 12px; }
+  .step { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; background: var(--soft); }
+  .step .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
+  .step b { display: block; font-size: 14px; }
+  .step small { color: var(--muted); font-size: 12px; }
+  .step.working { border-color: var(--c); background: var(--surface); }
+  .step.done small { color: var(--ok); }
+  .step.err small { color: var(--bad); }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--brand)); margin-right: 6px; }
+  .dot.live { animation: pulse 1s infinite; }
+
+  /* trip header */
+  .triphead { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; }
+  .route { font-size: clamp(20px, 3vw, 28px); font-weight: 750; letter-spacing: -.01em; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+  .route .arrow { color: var(--muted); font-weight: 400; }
+  .meta { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 14px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.info { background: var(--brand-soft); color: var(--brand); }
+  .note { background: var(--soft); border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 14px; white-space: pre-wrap; }
+  .alert { border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 14px; white-space: pre-wrap; }
+  .alert.bad { background: var(--bad-soft); color: var(--bad); }
+  .alert.warn { background: var(--warn-soft); color: var(--warn); }
+  .alert ul { margin: 6px 0 0; padding-left: 18px; white-space: normal; }
+
+  /* flights */
+  .flight { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto; gap: 16px; align-items: center; }
+  .flight + .flight { border-top: 1px dashed var(--line); margin-top: 14px; padding-top: 14px; }
+  @media (max-width: 640px) { .flight { grid-template-columns: 1fr; gap: 8px; } .price { text-align: left; } }
+  .airline { display: flex; align-items: center; gap: 8px; font-weight: 650; font-size: 14px; }
+  .tail { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 13px; flex: none; }
+  .times { display: grid; grid-template-columns: auto minmax(60px, 1fr) auto; gap: 10px; align-items: center; }
+  .times .t { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .times .c { font-size: 13px; color: var(--muted); }
+  .line { position: relative; height: 2px; background: var(--line); border-radius: 2px; }
+  .line::after { content: ""; position: absolute; right: -2px; top: -4px; border: 5px solid transparent; border-left-color: var(--muted); }
+  .line span { position: absolute; left: 50%; top: -20px; transform: translateX(-50%); font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .price { text-align: right; }
+  .price b { font-size: 20px; font-variant-numeric: tabular-nums; }
+  .price small { display: block; color: var(--muted); font-size: 12px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .tag { font-size: 12px; padding: 2px 8px; border-radius: 6px; background: var(--soft); color: var(--muted); }
+  .tag.ok { background: var(--ok-soft); color: var(--ok); }
+  .tag.warn { background: var(--warn-soft); color: var(--warn); }
+
+  /* stays & activities */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .tile { overflow: hidden; padding: 0; display: flex; flex-direction: column; }
+  .tile .img { height: 112px; position: relative; display: flex; align-items: flex-end; padding: 10px 12px; color: #fff; font-weight: 700; text-shadow: 0 1px 4px rgba(0, 0, 0, .35); }
+  .tile .img .where { font-size: 13px; opacity: .95; }
+  .tile .img .rating { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, .45); border-radius: 8px; padding: 2px 8px; font-size: 13px; text-shadow: none; }
+  .tile .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+  .tile .bottom { margin-top: auto; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .tile .bottom b { font-size: 17px; font-variant-numeric: tabular-nums; }
+
+  /* weather */
+  .wx { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .wxday { flex: none; width: 86px; border: 1px solid var(--line); border-radius: 12px; padding: 8px; text-align: center; font-size: 12px; background: var(--surface); }
+  .wxday.severe { border-color: var(--bad); background: var(--bad-soft); }
+  .wxday b { display: block; font-size: 15px; }
+  .wxnorm { display: flex; gap: 8px 18px; flex-wrap: wrap; align-items: center; font-size: 14px; }
+
+  /* itinerary */
+  .days { display: flex; flex-direction: column; gap: 10px; }
+  .day { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; }
+  .day .date { text-align: center; border-radius: 12px; background: var(--brand-soft); color: var(--brand); padding: 8px 4px; height: fit-content; }
+  .day .date b { display: block; font-size: 22px; line-height: 1; }
+  .day .date small { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  .day h3 { margin: 2px 0 4px; font-size: 15px; }
+  .day ul { margin: 0; padding-left: 18px; }
+  .day p { margin: 4px 0; }
+  .fallback { font-size: 13px; color: var(--warn); background: var(--warn-soft); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; }
+
+  /* price + checkout */
+  .lines { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .lines td { padding: 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .lines td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 10px; }
+  .lines tr.total td { border-bottom: 0; font-weight: 750; font-size: 17px; padding-top: 10px; }
+  .meter { height: 8px; background: var(--soft); border-radius: 999px; overflow: hidden; margin: 10px 0 4px; }
+  .meter i { display: block; height: 100%; background: var(--ok); }
+  .meter.over i { background: var(--bad); }
+  .checkout h3 { margin: 0 0 4px; font-size: 17px; display: flex; gap: 6px; align-items: center; }
+  .checkout .cta { width: 100%; margin-top: 12px; }
+  .codes { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .codes td { padding: 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .codes td:last-child { text-align: right; font-family: ui-monospace, Menlo, monospace; font-weight: 600; padding-left: 8px; }
+  .countdown { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+  /* chat */
+  .chat { display: flex; gap: 8px; margin-top: 10px; }
+  .chat input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--surface); }
+  .chat input:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+  .suggest { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* drawer */
+  .scrim { position: fixed; inset: 0; background: rgba(10, 15, 20, .35); z-index: 40; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100vw); background: var(--bg); z-index: 50; box-shadow: -12px 0 40px rgba(0, 0, 0, .2); display: flex; flex-direction: column; transform: translateX(100%); transition: transform .22s ease; visibility: hidden; }
+  .drawer.open { transform: none; visibility: visible; }
+  @media (prefers-reduced-motion: reduce) { .drawer { transition: none; } }
+  .drawer header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .drawer header h2 { margin: 0; font-size: 17px; flex: 1; }
+  .drawer .scroll { overflow: auto; padding: 16px 18px 40px; display: flex; flex-direction: column; gap: 16px; }
+  .drawer .explain { font-size: 13px; color: var(--muted); margin: 0; }
+  .lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  @media (max-width: 640px) { .lanes { grid-template-columns: 1fr 1fr; } }
+  .lane { border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 10px; padding: 8px 10px; background: var(--surface); font-size: 13px; min-width: 0; }
+  .lane b { display: block; }
+  .lane small { color: var(--muted); display: block; overflow-wrap: anywhere; }
+  .lane .st { font-weight: 600; }
+  .lane.working .st { color: var(--c); }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .filters button { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+  .filters button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .filters .count { margin-left: auto; font-size: 12px; color: var(--muted); }
+  .trace { display: flex; flex-direction: column; gap: 4px; }
+  .trace details { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .trace summary { cursor: pointer; padding: 6px 9px; font-size: 13px; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; list-style: none; }
+  .trace summary::-webkit-details-marker { display: none; }
+  .trace summary::before { content: "▸"; color: var(--muted); }
+  .trace details[open] > summary::before { content: "▾"; }
+  .trace .t { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .trace .who { font-size: 12px; font-weight: 700; color: var(--c, var(--ink)); }
+  .trace .kind { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 1px 6px; border-radius: 4px; background: var(--soft); }
+  .trace .kind.mcp { background: color-mix(in srgb, var(--flights) 18%, transparent); }
+  .trace .kind.model { background: color-mix(in srgb, var(--planner) 16%, transparent); }
+  .trace .kind.err { background: var(--bad-soft); color: var(--bad); }
+  .trace .ms { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .turn { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 2px; }
+  pre { margin: 0; padding: 8px 10px; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--code); border-top: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 380px; overflow: auto; }
+  pre .label { color: var(--muted); display: block; margin-top: 6px; }
+
+  /* MCP tools playground */
+  .servers { display: flex; flex-wrap: wrap; gap: 6px; }
+  .servers button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; }
+  .servers button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .toollist { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; }
+  .toollist button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 10px; font: 13px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .toollist button[aria-pressed="true"] { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
+  .runner textarea { width: 100%; min-height: 150px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--code); font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; }
+  .runner textarea:focus { outline: 2px solid var(--brand); outline-offset: -1px; }
+  .runbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+  .runbar .cta { padding: 9px 18px; font-size: 15px; }
+  .resp { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .resp .hd { display: flex; gap: 8px; align-items: center; padding: 6px 10px; font-size: 13px; }
+  .resp pre { max-height: 460px; }
+  .warnbox { font-size: 13px; background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 8px 12px; }
+
+  /* trips modal */
+  .modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; }
+  .modal .card { width: min(560px, 100%); max-height: 80vh; overflow: auto; }
+  .trips { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .trips button { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px; }
+  .trips button:hover { border-color: var(--brand); }
+  .trips small { display: block; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  footer { color: var(--muted); font-size: 13px; padding: 30px 0 50px; text-align: center; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M10.5 13.5 3 11l1.5-1.5 8 1L17 6c1-1 2.5-1.2 3-.7s.3 2-.7 3l-4.5 4.5 1 8L14.3 22l-2.5-7.5-3.3 3.3.3 2.7-1.3 1.3-1.5-3.5L2.5 16.8l1.3-1.3 2.7.3z"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 18V7M3 13h18v5M21 13a3 3 0 0 0-3-3h-7v3M7 11.5a1.5 1.5 0 1 0 0-.01"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0 5 5L21 13l-8 8-3-3 1.3-1.3a4 4 0 0 0-5-5L3 10.4 6.4 7l1.3 1.3a4 4 0 0 0 5-5z"/></symbol>
+</svg>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#" id="home"><span class="logo"><svg class="i"><use href="#i-plane"/></svg></span>Wayfarer <small>AI trip planner · sample</small></a>
+    <span class="spacer"></span>
+    <button class="navbtn" id="tripsBtn" type="button"><svg class="i"><use href="#i-list"/></svg><span class="lbl">My trips</span></button>
+    <button class="navbtn" id="toolsBtn" type="button" aria-controls="tools"><svg class="i"><use href="#i-wrench"/></svg><span class="lbl">MCP tools</span></button>
+    <button class="navbtn" id="activityBtn" type="button" aria-controls="drawer"><svg class="i"><use href="#i-bolt"/></svg><span class="lbl">Agent activity</span> <span class="badge" id="callBadge">0</span></button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Where to next?</h1>
+    <p>Tell us the route, the dates and the budget. A team of AI agents searches flights, stays, things to do and the weather, then checks every price before you book.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <form class="search" id="search" autocomplete="off">
+    <div class="tabs" role="tablist" aria-label="Trip type">
+      <button type="button" class="tab" role="tab" data-mode="round" aria-selected="true">Round trip</button>
+      <button type="button" class="tab" role="tab" data-mode="oneway" aria-selected="false">One-way</button>
+      <button type="button" class="tab" role="tab" data-mode="multi" aria-selected="false">Multi-city</button>
+      <button type="button" class="tab" role="tab" data-mode="free" aria-selected="false">Describe it</button>
+    </div>
+
+    <div id="simple" class="grid row4">
+      <div class="field"><label for="from">From</label><select id="from"></select></div>
+      <div class="field"><label for="to">To</label><select id="to"></select></div>
+      <div class="field"><label for="d1">Depart</label><input type="date" id="d1"></div>
+      <div class="field"><label for="d2" id="d2label">Return</label><input type="date" id="d2"></div>
+    </div>
+
+    <div id="multi" class="legs" hidden>
+      <div id="legs" class="legs"></div>
+      <div><button type="button" class="linkbtn" id="addLeg">+ Add a city</button></div>
+    </div>
+
+    <div id="free" hidden>
+      <div class="field"><label for="freeText">Your trip, in your words</label><textarea id="freeText" placeholder="e.g. Two of us from London to Kyoto for a week in April, about $6,000, temples and food."></textarea></div>
+    </div>
+
+    <div id="structured">
+      <div class="grid row3" style="margin-top:10px">
+        <div class="field"><label for="pax">Travellers</label><input type="number" id="pax" min="1" max="9" value="2"></div>
+        <div class="field"><label for="budget">Total budget (USD)</label><input type="number" id="budget" min="100" step="100" value="4000"></div>
+        <div class="field"><label for="notes">Anything else</label><input id="notes" placeholder="e.g. quiet neighbourhood, one rest day"></div>
+      </div>
+      <div class="opts">
+        <span class="lab">Interests</span>
+        <div class="chipset" id="interests"></div>
+      </div>
+      <div class="opts">
+        <label class="check"><input type="checkbox" id="nonstop"> Nonstop only</label>
+        <label class="check"><input type="checkbox" id="refundable"> Refundable fares</label>
+        <label class="check"><input type="checkbox" id="flex"> Dates can move a day</label>
+      </div>
+    </div>
+
+    <div class="searchfoot">
+      <span class="error" id="err" role="alert"></span>
+      <button class="cta" id="go" type="submit"><svg class="i"><use href="#i-plane"/></svg>Plan my trip</button>
+    </div>
+  </form>
+
+  <div class="ideas" id="ideas"><span class="lab">Try</span></div>
+
+  <section class="block" id="progress" hidden>
+    <div class="card">
+      <div class="triphead">
+        <div><b id="progressTitle">Planning your trip…</b><div class="muted" style="font-size:14px">The agents work in parallel. Planning usually takes a few minutes.</div></div>
+        <button class="navbtn" type="button" data-open-activity><svg class="i"><use href="#i-bolt"/></svg>Watch the agents</button>
+      </div>
+      <div class="steps" id="steps"></div>
+    </div>
+  </section>
+
+  <section class="block" id="results" hidden>
+    <div class="layout">
+      <div class="grid" style="gap:20px">
+        <div class="card" id="tripHead"></div>
+        <div id="flightsBlock"></div>
+        <div id="staysBlock"></div>
+        <div id="actsBlock"></div>
+        <div id="wxBlock"></div>
+        <div id="daysBlock"></div>
+        <div class="card">
+          <h2 class="sec" style="font-size:17px"><svg class="i"><use href="#i-pen"/></svg>Change something</h2>
+          <form class="chat" id="chat"><input id="chatText" placeholder="e.g. make it cheaper, swap an activity, add a day" aria-label="Message the planner"><button class="cta brand" type="submit">Send</button></form>
+          <div class="suggest" id="suggest"></div>
+        </div>
+      </div>
+      <div class="aside">
+        <div class="card" id="priceCard"></div>
+        <div class="card checkout" id="checkout"></div>
+        <div class="card" style="font-size:13px">
+          <b style="display:flex;gap:6px;align-items:center"><svg class="i"><use href="#i-shield"/></svg>How booking works</b>
+          <p class="muted" style="margin:6px 0 0">Every price is computed from the source records, not from the AI's text. Holding is free for 30 minutes. Paying and cancelling each need a separate message from you: the planner refuses to do either in the same step it shows you the total.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">A sample agent for testing with Rook. Airlines, hotels, prices, forecasts and advisories are fictional; nothing is charged.</footer>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Agent activity" aria-hidden="true">
+  <header>
+    <svg class="i"><use href="#i-bolt"/></svg>
+    <h2>Agent activity</h2>
+    <button class="iconbtn" style="height:34px" type="button" id="closeDrawer" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </header>
+  <div class="scroll">
+    <p class="explain">Behind every search, the orchestrator delegates to specialist agents, each with its own MCP server. Every model call, MCP tool call and hand-off is listed below. Open a row to see the request and the server's response.</p>
+    <div class="lanes" id="lanes"></div>
+    <div class="filters" id="filters">
+      <button type="button" data-f="all" aria-pressed="true">All</button>
+      <button type="button" data-f="mcp" aria-pressed="false">MCP tool calls</button>
+      <button type="button" data-f="model" aria-pressed="false">Model calls</button>
+      <button type="button" data-f="handoff" aria-pressed="false">Hand-offs</button>
+      <button type="button" data-f="check" aria-pressed="false">Checks &amp; files</button>
+      <span class="count" id="traceCount"></span>
+    </div>
+    <div class="trace" id="trace"></div>
+  </div>
+</aside>
+
+<aside class="drawer" id="tools" aria-label="MCP tools" aria-hidden="true">
+  <header>
+    <svg class="i"><use href="#i-wrench"/></svg>
+    <h2>MCP tools</h2>
+    <button class="iconbtn" style="height:34px" type="button" data-close-panel aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+  </header>
+  <div class="scroll">
+    <p class="explain">Call any tool on the same MCP servers the agents use, directly, with no model in between. These calls are not part of any trip, so they never appear in an agent's activity or in what Rook grades.</p>
+    <div class="servers" id="servers"><span class="muted" style="font-size:14px">Loading servers…</span></div>
+    <div class="toollist" id="toollist"></div>
+    <div class="runner" id="runner" hidden>
+      <div class="card" style="padding:12px 14px">
+        <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap"><b id="toolName" style="font-family:ui-monospace,Menlo,monospace"></b><span class="muted" id="toolServer" style="font-size:13px"></span></div>
+        <p id="toolDesc" style="margin:6px 0;font-size:14px"></p>
+        <details><summary class="muted" style="cursor:pointer;font-size:13px">Input schema</summary><pre id="toolSchema"></pre></details>
+      </div>
+      <div class="warnbox" id="toolWarn" hidden style="margin-top:10px">This server has effects: holds, bookings and cancellations you make here are written to the bookings ledger (fictional, nothing is charged).</div>
+      <label class="lab" for="toolArgs" style="display:block;margin:12px 0 4px">Arguments (JSON)</label>
+      <textarea id="toolArgs" spellcheck="false"></textarea>
+      <div class="runbar">
+        <button class="cta brand" type="button" id="runTool">Run tool</button>
+        <button class="navbtn" type="button" id="resetArgs">Reset example</button>
+        <span class="error" id="toolErr"></span>
+      </div>
+    </div>
+    <div class="resp" id="resp" hidden>
+      <div class="hd"><span class="pill" id="respPill"></span><b id="respTitle" style="font-family:ui-monospace,Menlo,monospace;font-size:13px"></b><span class="muted" id="respMs" style="margin-left:auto"></span></div>
+      <pre id="respBody"></pre>
+    </div>
+    <div>
+      <div class="lab" style="margin-bottom:6px">History</div>
+      <div class="trace" id="history"><span class="muted" style="font-size:13px">Calls you run appear here.</span></div>
+    </div>
+  </div>
+</aside>
+
+<div class="modal" id="tripsModal" hidden>
+  <div class="scrim" data-close-trips></div>
+  <div class="card" style="position:relative;z-index:61" role="dialog" aria-label="My trips">
+    <div class="triphead"><h2 class="sec" style="margin:0">My trips</h2><button class="iconbtn" style="height:34px" type="button" data-close-trips aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <ul class="trips" id="trips"></ul>
+  </div>
+</div>
+
+<script>
+// ---- reference data: the sample's fictional coverage ---------------------------
+const ORIGINS = [["JFK", "New York (JFK)"], ["SFO", "San Francisco (SFO)"], ["LHR", "London (LHR)"], ["BOM", "Mumbai (BOM)"]];
+const DESTS = [["Lisbon", "Lisbon (LIS)"], ["Kyoto", "Kyoto (KIX)"], ["Reykjavik", "Reykjavik (KEF)"], ["Cape Town", "Cape Town (CPT)"]];
+const CITY_OF = { JFK: "New York", SFO: "San Francisco", LHR: "London", BOM: "Mumbai", LIS: "Lisbon", KIX: "Kyoto", KEF: "Reykjavik", CPT: "Cape Town" };
+const PLACES = [...ORIGINS.map(([c, l]) => [CITY_OF[c], l]), ...DESTS];
+const INTERESTS = ["food", "culture", "history", "outdoors", "nature", "wellness"];
+const AGENTS = [
+  { id: "travel-planner", title: "Planner", sub: "orchestrator", color: "var(--planner)", icon: "i-flag" },
+  { id: "flights-agent", title: "Flights", sub: "flights MCP", color: "var(--flights)", icon: "i-plane" },
+  { id: "stays-agent", title: "Stays", sub: "stays MCP", color: "var(--stays)", icon: "i-bed" },
+  { id: "activities-agent", title: "Activities", sub: "destinations MCP", color: "var(--activities)", icon: "i-pin" },
+  { id: "weather-agent", title: "Weather", sub: "weather MCP", color: "var(--weather)", icon: "i-sun" },
+  { id: "itinerary-writer", title: "Itinerary", sub: "writer, no tools", color: "var(--writer)", icon: "i-cal" },
+  { id: "booking-agent", title: "Booking", sub: "bookings MCP (code)", color: "var(--booking)", icon: "i-shield" },
+];
+const AGENT = Object.fromEntries(AGENTS.map((a) => [a.id, a]));
+const IDEAS = [
+  { t: "Lisbon for two", d: "Food & fado, December", fill: { mode: "round", from: "JFK", to: "Lisbon", d1: "2026-12-12", d2: "2026-12-18", pax: 2, budget: 4000, interests: ["food", "culture"] } },
+  { t: "Lisbon → Reykjavik", d: "Multi-city, nonstop", fill: { mode: "multi", legs: [["JFK", "Lisbon", "2027-05-01"], ["Lisbon", "Reykjavik", "2027-05-05"], ["Reykjavik", "New York", "2027-05-09"]], pax: 2, budget: 7000, interests: ["food", "nature"], nonstop: true, flex: true } },
+  { t: "Kyoto family week", d: "Temples, nonstop", fill: { mode: "round", from: "SFO", to: "Kyoto", d1: "2027-04-02", d2: "2027-04-09", pax: 4, budget: 12000, interests: ["history", "food"], nonstop: true } },
+  { t: "One-way to Cape Town", d: "Solo, refundable", fill: { mode: "oneway", from: "LHR", to: "Cape Town", d1: "2027-01-10", d2: "2027-01-17", pax: 1, budget: 3000, interests: ["nature"], refundable: true } },
+];
+
+// ---- helpers ---------------------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const usd = (n) => "$" + Number(n || 0).toLocaleString();
+const icon = (id) => `<svg class="i"><use href="#${id}"/></svg>`;
+const utc = (iso) => new Date(iso + "T12:00:00Z");
+const dayName = (iso) => utc(iso).toLocaleDateString(undefined, { weekday: "short", timeZone: "UTC" });
+const niceDate = (iso) => utc(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+const shortDate = (iso) => utc(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", timeZone: "UTC" });
+const newId = () => "trip-" + new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-");
+const hue = (s) => [...String(s)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+const art = (s) => `linear-gradient(135deg, hsl(${hue(s)} 45% 38%), hsl(${(hue(s) + 50) % 360} 55% 55%))`;
+function addDays(iso, n) { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+
+let sid = null;
+let stream = null;
+let mode = "round";
+let running = false;
+let callCount = 0;
+let traceFilter = "all";
+let countdownTimer = null;
+
+// ---- search form -------------------------------------------------------------------
+function options(list, selected) { return list.map(([v, l]) => `<option value="${esc(v)}" ${v === selected ? "selected" : ""}>${esc(l)}</option>`).join(""); }
+$("from").innerHTML = options(ORIGINS, "JFK");
+$("to").innerHTML = options(DESTS, "Lisbon");
+$("interests").innerHTML = INTERESTS.map((i) => `<button type="button" class="chip" aria-pressed="false" data-i="${i}">${i}</button>`).join("");
+$("interests").addEventListener("click", (e) => { const b = e.target.closest(".chip"); if (b) b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); });
+
+function legRow(from = "", to = "", d = "") {
+  const div = document.createElement("div");
+  div.className = "leg";
+  div.innerHTML = `
+    <div class="field"><label>From</label><select data-k="from">${options(PLACES, from)}</select></div>
+    <div class="field"><label>To</label><select data-k="to">${options(PLACES, to)}</select></div>
+    <div class="field"><label>Date</label><input type="date" data-k="date" value="${esc(d)}"></div>
+    <button type="button" class="iconbtn" aria-label="Remove this flight">${icon("i-x")}</button>`;
+  div.querySelector("button").onclick = () => { if ($("legs").children.length > 1) div.remove(); };
+  return div;
+}
+$("addLeg").onclick = () => {
+  const last = $("legs").lastElementChild;
+  const from = last ? last.querySelector('[data-k="to"]').value : "New York";
+  const d = last?.querySelector('[data-k="date"]').value;
+  $("legs").appendChild(legRow(from, "New York", d ? addDays(d, 4) : ""));
+};
+
+function setMode(m) {
+  mode = m;
+  for (const t of document.querySelectorAll(".tab")) t.setAttribute("aria-selected", String(t.dataset.mode === m));
+  $("simple").hidden = !(m === "round" || m === "oneway");
+  $("multi").hidden = m !== "multi";
+  $("free").hidden = m !== "free";
+  $("structured").hidden = m === "free";
+  $("d2label").textContent = m === "oneway" ? "Stay until (optional)" : "Return";
+  if (m === "multi" && !$("legs").children.length) $("legs").append(legRow("New York", "Lisbon"), legRow("Lisbon", "Reykjavik"), legRow("Reykjavik", "New York"));
+}
+document.querySelector(".tabs").addEventListener("click", (e) => { const t = e.target.closest(".tab"); if (t) setMode(t.dataset.mode); });
+
+function fill(f) {
+  setMode(f.mode);
+  if (f.mode === "multi") {
+    $("legs").innerHTML = "";
+    for (const [a, b, d] of f.legs) $("legs").appendChild(legRow(CITY_OF[a] || a, CITY_OF[b] || b, d));
+  } else {
+    $("from").value = f.from; $("to").value = f.to; $("d1").value = f.d1; $("d2").value = f.d2;
+  }
+  $("pax").value = f.pax; $("budget").value = f.budget; $("notes").value = "";
+  for (const c of $("interests").children) c.setAttribute("aria-pressed", String((f.interests || []).includes(c.dataset.i)));
+  $("nonstop").checked = !!f.nonstop; $("refundable").checked = !!f.refundable; $("flex").checked = !!f.flex;
+}
+for (const idea of IDEAS) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "idea";
+  b.innerHTML = `<b>${esc(idea.t)}</b><span class="muted">${esc(idea.d)}</span>`;
+  b.onclick = () => { fill(idea.fill); $("search").scrollIntoView({ block: "start" }); };
+  $("ideas").appendChild(b);
+}
+
+/** The form becomes one plain-language request; the planner reads it like any message. */
+function composeRequest() {
+  if (mode === "free") {
+    const t = $("freeText").value.trim();
+    if (!t) throw new Error("Describe your trip first.");
+    return t;
+  }
+  const pax = Number($("pax").value), budget = Number($("budget").value);
+  if (!pax || pax < 1) throw new Error("How many travellers?");
+  if (!budget) throw new Error("Add a total budget.");
+  const who = pax === 1 ? "One traveller (solo)" : `${pax} travellers`;
+  let route;
+  if (mode === "multi") {
+    const legs = [...$("legs").children].map((r) => ({ from: r.querySelector('[data-k="from"]').value, to: r.querySelector('[data-k="to"]').value, date: r.querySelector('[data-k="date"]').value }));
+    if (legs.some((l) => !l.date)) throw new Error("Give every flight a date.");
+    if (legs.some((l) => l.from === l.to)) throw new Error("A flight can't start and end in the same city.");
+    route = "Multi-city route: " + legs.map((l) => `${l.from} to ${l.to} on ${l.date}`).join("; ") + ".";
+  } else {
+    const from = $("from").selectedOptions[0].textContent, to = $("to").value, d1 = $("d1").value, d2 = $("d2").value;
+    if (!d1) throw new Error("Pick a departure date.");
+    if (mode === "round") {
+      if (!d2) throw new Error("Pick a return date.");
+      if (d2 <= d1) throw new Error("The return must be after departure.");
+      route = `Round trip from ${from} to ${to}, departing ${d1} and returning ${d2}.`;
+    } else {
+      route = `One-way from ${from} to ${to} on ${d1}` + (d2 ? `, staying in ${to} until ${d2}.` : ", no stay needed at the destination.");
+    }
+  }
+  const interests = [...$("interests").querySelectorAll('[aria-pressed="true"]')].map((b) => b.dataset.i);
+  const prefs = [];
+  if ($("nonstop").checked) prefs.push("Nonstop flights only.");
+  if ($("refundable").checked) prefs.push("Refundable fares only.");
+  prefs.push($("flex").checked ? "Dates can move a day either way." : "The dates are fixed.");
+  const notes = $("notes").value.trim();
+  return [`${who}. ${route}`, `Total budget $${budget.toLocaleString()} USD.`, interests.length ? `Interests: ${interests.join(", ")}.` : "", ...prefs, notes].filter(Boolean).join(" ");
+}
+
+$("search").addEventListener("submit", (e) => {
+  e.preventDefault();
+  $("err").textContent = "";
+  let text;
+  try { text = composeRequest(); } catch (err) { $("err").textContent = err.message; return; }
+  sid = newId();
+  history.replaceState(null, "", "#trip=" + sid);
+  clearTrace();
+  $("results").hidden = true;
+  send(text);
+});
+
+// ---- running a turn ------------------------------------------------------------------
+async function send(text) {
+  if (running) return;
+  $("err").textContent = "";
+  setRunning(true);
+  try {
+    const res = await fetch("/api/execute", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ session_id: sid, task: text }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error);
+    follow(sid, data.from, true);
+  } catch (err) {
+    setRunning(false);
+    $("err").textContent = err.message;
+    $("chatText").placeholder = "Error: " + err.message;
+  }
+}
+
+function setRunning(on) {
+  running = on;
+  $("go").disabled = on;
+  for (const b of document.querySelectorAll("[data-say], #chat button")) b.disabled = on;
+  $("callBadge").classList.toggle("live", on);
+  $("progress").hidden = !on;
+  if (on) { resetSteps(); $("progress").scrollIntoView({ block: "start" }); }
+}
+
+function follow(id, from, live) {
+  if (stream) stream.close();
+  stream = new EventSource(`/api/events?session_id=${encodeURIComponent(id)}&from=${from}`);
+  stream.addEventListener("log", (m) => onLog(JSON.parse(m.data), live));
+  stream.addEventListener("result", async () => {
+    stream.close(); stream = null;
+    setRunning(false);
+    await loadTrip(id);
+  });
+  stream.onerror = () => { if (stream && stream.readyState === EventSource.CLOSED) setRunning(false); };
+}
+
+// ---- progress steps, from the same log events -------------------------------------
+function resetSteps() {
+  $("steps").innerHTML = AGENTS.map((a) => `<div class="step" id="step-${a.id}" style="--c:${a.color}"><span class="ic">${icon(a.icon)}</span><span><b>${a.title}</b><small>waiting</small></span></div>`).join("");
+  $("progressTitle").textContent = "Working on it…";
+}
+function stepState(id, state, text) {
+  const el = $("step-" + id); if (!el) return;
+  el.className = "step " + state;
+  el.querySelector("small").innerHTML = state === "working" ? `<span class="dot live" style="--c:${AGENT[id].color}"></span>${esc(text)}` : esc(text);
+}
+
+// ---- agent activity: lanes and trace ---------------------------------------------
+function renderLanes() {
+  $("lanes").innerHTML = AGENTS.map((a) => `<div class="lane" id="lane-${a.id}" style="--c:${a.color}"><b>${icon(a.icon)} ${a.title}</b><small>${a.sub}</small><small class="st">idle</small></div>`).join("");
+}
+function laneState(id, working, text) {
+  const el = $("lane-" + id); if (!el) return;
+  el.classList.toggle("working", working);
+  el.querySelector(".st").textContent = text;
+}
+function clearTrace() {
+  $("trace").innerHTML = `<div class="muted" style="font-size:14px">Calls appear here as they happen.</div>`;
+  callCount = 0;
+  $("callBadge").textContent = "0";
+  $("traceCount").textContent = "";
+  renderLanes();
+}
+
+const pretty = (v) => esc(typeof v === "string" ? v : JSON.stringify(v, null, 2));
+const io = (req, res) => `<pre><span class="label">request</span>${pretty(req ?? {})}${res !== undefined ? `<span class="label">response</span>${pretty(res)}` : ""}</pre>`;
+
+function traceRow(e) {
+  const ms = e.ms != null ? `${(e.ms / 1000).toFixed(e.ms < 10000 ? 2 : 1)}s` : "";
+  switch (e.event) {
+    case "model_call": {
+      const asked = (e.requested || []).map((r) => r.tool);
+      const what = e.error ? `failed: ${e.error}` : asked.length ? `asked for ${asked.join(", ")}` : "replied";
+      return ["model", e.agent, e.error ? "err" : "model", "model", `step ${e.step} · ${what} · ${e.input_tokens ?? 0}→${e.output_tokens ?? 0} tok`, ms,
+        `<pre><span class="label">tool calls requested</span>${pretty(e.requested || [])}${e.text ? `<span class="label">text</span>${pretty(e.text)}` : ""}${e.error ? `<span class="label">error</span>${pretty(e.error)}` : ""}</pre>`];
+    }
+    case "tool_call":
+      return ["mcp", e.agent, e.error ? "err" : "mcp", `MCP · ${e.server}`, `${e.tool}${e.error ? " ⚠ " + e.error : ""}`, ms, io(e.arguments, e.result)];
+    case "mcp_tools_listed":
+      return ["mcp", e.agent, "mcp", `MCP · ${e.server}`, `tools/list → ${e.tools.length} tools`, ms, `<pre>${pretty(e.tools)}</pre>`];
+    case "subagent_start":
+      return ["handoff", e.agent, "", "hand-off", `Planner → ${AGENT[e.agent]?.title || e.agent}`, "", e.task ? `<pre><span class="label">task</span>${pretty(e.task)}</pre>` : ""];
+    case "subagent_end":
+      return ["handoff", e.agent, e.error ? "err" : "", "returned", `${AGENT[e.agent]?.title || e.agent} → Planner${e.error ? " ⚠ " + e.error : ""}`, "", e.answer != null ? `<pre><span class="label">answer</span>${pretty(e.answer)}</pre>` : ""];
+    case "verification":
+      return ["check", "travel-planner", e.ok ? "" : "err", "verify", e.ok ? `passed · ${usd(e.total_usd)}` : `${e.problems.length} problem(s), sent back for revision`, "", `<pre>${pretty(e)}</pre>`];
+    case "file_written":
+      return ["check", "travel-planner", "", "file", e.path.split(/[\\/]/).pop(), "", ""];
+    case "model_error": case "crash":
+      return ["check", "travel-planner", "err", e.event, e.message, "", e.trace ? `<pre>${pretty(e.trace)}</pre>` : ""];
+  }
+  return null;
+}
+
+function addTrace(e) {
+  const placeholder = $("trace").querySelector(".muted"); if (placeholder) placeholder.remove();
+  if (e.event === "execute") {
+    $("trace").insertAdjacentHTML("beforeend", `<div class="turn">You: ${esc(e.task.length > 100 ? e.task.slice(0, 98) + "…" : e.task)}</div>`);
+    return;
+  }
+  const row = traceRow(e);
+  if (!row) return;
+  const [group, agent, cls, kind, summary, ms, detail] = row;
+  const t = e.ts ? new Date(e.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "";
+  const el = document.createElement("div");
+  el.dataset.group = group;
+  el.hidden = traceFilter !== "all" && traceFilter !== group;
+  el.innerHTML = `<details><summary><span class="t">${t}</span><span class="who" style="--c:${AGENT[agent]?.color || "var(--ink)"}">${esc(AGENT[agent]?.title || agent)}</span><span class="kind ${cls}">${esc(kind)}</span><span>${esc(summary)}</span><span class="ms">${ms}</span></summary>${detail}</details>`;
+  const sc = $("drawer").querySelector(".scroll");
+  const atBottom = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140;
+  $("trace").appendChild(el);
+  if (group === "mcp" || group === "model") { callCount++; $("callBadge").textContent = String(callCount); }
+  $("traceCount").textContent = `${callCount} call${callCount === 1 ? "" : "s"}`;
+  if (atBottom) sc.scrollTop = sc.scrollHeight;
+}
+
+$("filters").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-f]"); if (!b) return;
+  traceFilter = b.dataset.f;
+  for (const x of $("filters").querySelectorAll("button")) x.setAttribute("aria-pressed", String(x === b));
+  for (const row of $("trace").children) if (row.dataset.group) row.hidden = traceFilter !== "all" && traceFilter !== row.dataset.group;
+});
+
+function onLog(e, live) {
+  addTrace(e);
+  const a = e.agent;
+  switch (e.event) {
+    case "execute":
+      renderLanes();
+      if (live) { resetSteps(); stepState("travel-planner", "working", "reading your request"); }
+      laneState("travel-planner", true, "thinking");
+      break;
+    case "model_call":
+      if (a === "travel-planner" && live) stepState("travel-planner", "working", (e.requested || []).length ? "delegating" : "deciding");
+      break;
+    case "subagent_start":
+      laneState(a, true, "working");
+      if (live) stepState(a, "working", a === "booking-agent" ? (e.task || "").split(" ")[0].replaceAll("_", " ") : "searching");
+      if (live && a === "itinerary-writer") $("progressTitle").textContent = "Prices checked. Writing your day-by-day plan…";
+      if (live && a === "booking-agent") $("progressTitle").textContent = "Talking to the booking desk…";
+      break;
+    case "tool_call":
+      if (live) stepState(a, "working", e.tool.replaceAll("_", " "));
+      break;
+    case "subagent_end":
+      laneState(a, false, e.error ? "error" : `done${e.tool_calls != null ? ` · ${e.tool_calls} MCP call${e.tool_calls === 1 ? "" : "s"}` : ""}`);
+      if (live) stepState(a, e.error ? "err" : "done", e.error ? (a === "itinerary-writer" ? "timed out; planner laid out the days" : a === "booking-agent" ? "refused (see activity)" : "error") : "done");
+      break;
+    case "verification":
+      if (live) stepState("travel-planner", "working", e.ok ? "prices verified" : "fixing problems");
+      if (live && !e.ok) $("progressTitle").textContent = "Found a problem with the picks. Revising…";
+      break;
+    case "turn_metrics":
+      laneState("travel-planner", false, e.status.replace("_", " "));
+      if (live) stepState("travel-planner", "done", e.status.replace("_", " "));
+      break;
+    case "model_error": case "crash":
+      laneState("travel-planner", false, "error");
+      if (live) stepState("travel-planner", "err", "error");
+      break;
+  }
+}
+
+// ---- drawer and trips modal -------------------------------------------------------
+function openPanel(id, open) {
+  for (const p of ["drawer", "tools"]) {
+    const on = open && p === id;
+    $(p).classList.toggle("open", on);
+    $(p).setAttribute("aria-hidden", String(!on));
+  }
+  $("scrim").hidden = !open;
+}
+const openDrawer = (open) => openPanel("drawer", open);
+$("activityBtn").onclick = () => openDrawer(true);
+$("toolsBtn").onclick = () => { openPanel("tools", true); loadTools(); };
+$("closeDrawer").onclick = () => openDrawer(false);
+$("scrim").onclick = () => openPanel(null, false);
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-open-activity]")) openDrawer(true);
+  if (e.target.closest("[data-close-panel]")) openPanel(null, false);
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { openPanel(null, false); $("tripsModal").hidden = true; } });
+
+// ---- MCP tools playground ------------------------------------------------------------
+// Example arguments per tool, using records that exist in the sample data.
+const TOOL_EXAMPLES = {
+  "flights.list_airports": {},
+  "flights.search_flights": { origin: "JFK", destination: "Lisbon", depart_date: "2026-12-12", return_date: "2026-12-18", passengers: 2, flex_days: 1, nonstop_only: true },
+  "flights.get_fare": { fare_id: "FL-JFK-LIS-20261212-1" },
+  "stays.search_stays": { city: "Lisbon", check_in: "2026-12-12", check_out: "2026-12-18", guests: 2, max_nightly_usd: 200 },
+  "stays.get_stay": { stay_id: "ST-LIS-01" },
+  "stays.get_reviews": { stay_id: "ST-LIS-02" },
+  "destinations.destination_info": { city: "Reykjavik" },
+  "destinations.search_activities": { city: "Reykjavik", categories: ["outdoors", "nature"] },
+  "destinations.travel_advisories": { city: "Reykjavik", start_date: "2027-05-05", end_date: "2027-05-09" },
+  "weather.forecast": { city: "Lisbon", start_date: new Date().toISOString().slice(0, 10), end_date: addDays(new Date().toISOString().slice(0, 10), 6) },
+  "weather.climate": { city: "Kyoto", month: 4 },
+  "bookings.create_hold": { travellers: 2, reference: "playground", items: [{ kind: "fare", id: "FL-JFK-LIS-20261212-1" }, { kind: "stay", id: "ST-LIS-01", check_in: "2026-12-12", check_out: "2026-12-18", units: 1 }, { kind: "activity", id: "AC-LIS-01" }] },
+  "bookings.confirm_hold": { hold_id: "HLD-…" },
+  "bookings.quote_cancellation": { booking_id: "BKG-UAC5HI" },
+  "bookings.cancel_booking": { booking_id: "BKG-…" },
+  "bookings.get_booking": { id: "BKG-UAC5HI" },
+  "bookings.list_bookings": { reference: "multi-city" },
+};
+let toolServers = [];
+let currentTool = null;
+
+function exampleFor(server, tool) {
+  const key = `${server}.${tool.name}`;
+  if (TOOL_EXAMPLES[key]) return TOOL_EXAMPLES[key];
+  // Fallback: every required property with a placeholder of its type.
+  const props = tool.inputSchema?.properties || {};
+  return Object.fromEntries((tool.inputSchema?.required || []).map((k) => [k, { integer: 1, number: 1, boolean: false, array: [], object: {} }[props[k]?.type] ?? ""]));
+}
+
+async function loadTools() {
+  if (toolServers.length) return;
+  try {
+    const { servers } = await (await fetch("/api/mcp/tools")).json();
+    toolServers = servers;
+    $("servers").innerHTML = servers.map((sv, i) => `<button type="button" data-server="${esc(sv.name)}" aria-pressed="${i === 0}">${esc(sv.name)} <span class="muted" style="font-weight:400">${sv.error ? "unreachable" : sv.tools.length}</span></button>`).join("");
+    if (servers[0]) showServer(servers[0].name);
+  } catch { $("servers").innerHTML = `<span class="error">Could not list the MCP servers.</span>`; }
+}
+
+function showServer(name) {
+  for (const b of $("servers").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.server === name));
+  const sv = toolServers.find((x) => x.name === name);
+  $("toollist").innerHTML = sv?.error ? `<span class="error">${esc(sv.error)}</span>` : sv.tools.map((t) => `<button type="button" data-tool="${esc(t.name)}" data-server="${esc(name)}" aria-pressed="false">${esc(t.name)}</button>`).join("");
+  if (sv?.tools[0]) showTool(name, sv.tools[0].name);
+}
+
+function showTool(server, name) {
+  const tool = toolServers.find((x) => x.name === server)?.tools.find((t) => t.name === name);
+  if (!tool) return;
+  currentTool = { server, tool };
+  for (const b of $("toollist").querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset.tool === name));
+  $("runner").hidden = false;
+  $("toolName").textContent = name;
+  $("toolServer").textContent = `on the ${server} MCP server`;
+  $("toolDesc").textContent = tool.description || "";
+  $("toolSchema").textContent = JSON.stringify(tool.inputSchema || {}, null, 2);
+  $("toolWarn").hidden = server !== "bookings";
+  $("toolArgs").value = JSON.stringify(exampleFor(server, tool), null, 2);
+  $("toolErr").textContent = "";
+}
+
+$("servers").addEventListener("click", (e) => { const b = e.target.closest("button[data-server]"); if (b) showServer(b.dataset.server); });
+$("toollist").addEventListener("click", (e) => { const b = e.target.closest("button[data-tool]"); if (b) showTool(b.dataset.server, b.dataset.tool); });
+$("resetArgs").onclick = () => { if (currentTool) $("toolArgs").value = JSON.stringify(exampleFor(currentTool.server, currentTool.tool), null, 2); };
+
+$("runTool").onclick = async () => {
+  if (!currentTool) return;
+  $("toolErr").textContent = "";
+  let args;
+  try { args = JSON.parse($("toolArgs").value || "{}"); } catch (err) { $("toolErr").textContent = "Arguments are not valid JSON: " + err.message; return; }
+  $("runTool").disabled = true; $("runTool").textContent = "Running…";
+  try {
+    const res = await fetch("/api/mcp/call", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ server: currentTool.server, tool: currentTool.tool.name, arguments: args }) });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || data.error);
+    showResponse(data);
+    addHistory(data);
+  } catch (err) {
+    $("toolErr").textContent = err.message;
+  } finally {
+    $("runTool").disabled = false; $("runTool").textContent = "Run tool";
+  }
+};
+
+function showResponse(d) {
+  $("resp").hidden = false;
+  $("respPill").className = "pill " + (d.ok ? "ok" : "bad");
+  $("respPill").textContent = d.ok ? "ok" : "error";
+  $("respTitle").textContent = `${d.server}.${d.tool}`;
+  $("respMs").textContent = `${d.ms} ms`;
+  $("respBody").textContent = JSON.stringify(d.result, null, 2);
+  $("resp").scrollIntoView({ block: "nearest" });
+}
+
+function addHistory(d) {
+  const placeholder = $("history").querySelector(".muted"); if (placeholder) placeholder.remove();
+  const el = document.createElement("div");
+  const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  el.innerHTML = `<details><summary><span class="t">${t}</span><span class="kind ${d.ok ? "mcp" : "err"}">MCP · ${esc(d.server)}</span><span>${esc(d.tool)}</span><span class="ms">${d.ms} ms</span></summary>${io(d.arguments, d.result)}</details>`;
+  $("history").prepend(el);
+}
+
+$("tripsBtn").onclick = async () => {
+  $("tripsModal").hidden = false;
+  $("trips").innerHTML = `<li class="muted">Loading…</li>`;
+  try {
+    const { sessions } = await (await fetch("/api/sessions")).json();
+    $("trips").innerHTML = sessions.length ? sessions.map((s) => `<li><button type="button" data-sid="${esc(s.session_id)}">
+      <b>${esc(s.session_id)}</b> <span class="muted">· ${s.turns} message${s.turns === 1 ? "" : "s"}${s.running ? " · planning…" : s.total_usd ? " · " + usd(s.total_usd) : ""}</span>
+      <small>${esc(s.last_goal || "")}</small></button></li>`).join("") : `<li class="muted">No trips yet.</li>`;
+  } catch { $("trips").innerHTML = `<li class="error">Could not load trips.</li>`; }
+};
+document.addEventListener("click", (e) => { if (e.target.closest("[data-close-trips]")) $("tripsModal").hidden = true; });
+$("trips").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-sid]"); if (!b) return;
+  $("tripsModal").hidden = true;
+  openTrip(b.dataset.sid);
+});
+$("home").onclick = (e) => { e.preventDefault(); history.replaceState(null, "", "#"); $("results").hidden = true; window.scrollTo(0, 0); };
+
+/** Open an existing trip: replay its whole log into the activity panel, then draw it. */
+async function openTrip(id) {
+  sid = id;
+  history.replaceState(null, "", "#trip=" + id);
+  clearTrace();
+  const res = await fetch(`/api/session?session_id=${encodeURIComponent(id)}`);
+  if (!res.ok) { $("err").textContent = "That trip no longer exists."; return; }
+  const view = await res.json();
+  if (view.running) { setRunning(true); follow(id, 0, true); return; }
+  follow(id, 0, false);
+}
+
+// ---- drawing a trip -------------------------------------------------------------------
+async function loadTrip(id) {
+  const res = await fetch(`/api/session?session_id=${encodeURIComponent(id)}`);
+  if (res.ok) render(await res.json());
+}
+
+function render(v) {
+  $("results").hidden = false;
+  const trip = v.trip;
+  const answer = (v.last_answer || "").replace(/^STATUS:\s*\w+\s*/i, "").trim();
+  const flights = trip?.flights || [];
+  const legs = trip?.legs || [];
+
+  let head;
+  if (flights.length) {
+    const cities = [flights[0].origin, ...flights.map((f) => f.destination)].map((c) => CITY_OF[c] || c);
+    const start = flights[0].depart_date, end = legs.at(-1)?.check_out || flights.at(-1).depart_date;
+    const nights = legs.reduce((n, l) => n + (l.nights || 0), 0);
+    const prefs = Object.entries(trip.preferences || {}).map(([k, x]) => x === true ? k : `${k} ${x}`).join(" · ");
+    head = `<div class="triphead"><div><div class="route">${cities.map(esc).join('<span class="arrow">→</span>')}</div>
+      <div class="meta"><span>${icon("i-cal")} ${niceDate(start)} – ${niceDate(end)}</span><span>${trip.travellers} traveller${trip.travellers === 1 ? "" : "s"}</span><span>${nights} night${nights === 1 ? "" : "s"}</span>${prefs ? `<span>${esc(prefs)}</span>` : ""}</div></div>
+      <span class="pill ${trip.problems?.length ? "bad" : v.booking?.booking?.status === "confirmed" ? "ok" : "info"}">${trip.problems?.length ? "Needs attention" : bookingLabel(v)}</span></div>`;
+  } else {
+    head = `<div class="triphead"><div class="route">${v.status === "needs_input" ? "One question first" : "Your trip"}</div></div>`;
+  }
+  if (answer) {
+    // The latest reply: the planner's note on a new plan, or its answer to a booking request.
+    const text = v.status === "completed" ? answer.split(/\n\s*\nTotal:/)[0] : answer;
+    head += `<div class="${v.status === "needs_input" ? "alert warn" : "note"}">${esc(text)}</div>`;
+  }
+  if (trip?.problems?.length) head += `<div class="alert bad"><b>Unresolved problems</b><ul>${trip.problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>`;
+  $("tripHead").innerHTML = head;
+
+  $("flightsBlock").innerHTML = flights.length ? `<h2 class="sec">${icon("i-plane")} Flights</h2><div class="card">${flights.map(flightCard).join("")}</div>` : "";
+  $("staysBlock").innerHTML = legs.length ? `<h2 class="sec">${icon("i-bed")} Where you'll stay</h2><div class="cards">${legs.map(stayCard).join("")}</div>` : "";
+  const acts = trip?.activities || [];
+  $("actsBlock").innerHTML = acts.length ? `<h2 class="sec">${icon("i-pin")} Things to do</h2><div class="cards">${acts.map(actCard).join("")}</div>` : "";
+  const wx = trip?.weather || {};
+  $("wxBlock").innerHTML = Object.keys(wx).length ? `<h2 class="sec">${icon("i-sun")} Weather</h2><div class="grid" style="gap:12px">${Object.entries(wx).map(([city, w]) => weatherCard(city, w, legs.find((l) => l.city === city))).join("")}</div>` : "";
+  $("daysBlock").innerHTML = v.itinerary_md ? daysBlock(v.itinerary_md) : "";
+  $("priceCard").innerHTML = trip ? priceCard(trip) : `<b>Price summary</b><p class="muted" style="margin:6px 0 0">Appears once there's a plan.</p>`;
+  $("checkout").innerHTML = checkoutCard(v);
+  startCountdown();
+
+  const sugg = v.status === "needs_input" ? [] : v.booking?.booking ? ["What's non-refundable?", "Show my confirmation codes"] : ["Make it cheaper", "Swap one activity for something outdoors", "Add a rest day", "Upgrade the stay"];
+  $("suggest").innerHTML = sugg.map((s) => `<button type="button" class="chip" data-say="${esc(s)}">${esc(s)}</button>`).join("");
+  $("chatText").placeholder = v.status === "needs_input" ? "Answer the question above" : "e.g. make it cheaper, swap an activity, add a day";
+  $("results").scrollIntoView({ block: "start" });
+}
+
+function bookingLabel(v) {
+  const b = v.booking;
+  if (b?.booking) return b.booking.status === "cancelled" ? "Cancelled" : "Booked";
+  if (b?.hold?.status === "held") return "On hold";
+  return "Ready to book";
+}
+
+const AIRLINE_COLOR = { Kestrel: "#c4532f", "Bluefin Airways": "#2f6db0", "Northwind Air": "#2f7d5b" };
+function flightCard(f) {
+  // The fare data has departure times only, in local time; an arrival clock time would be invented.
+  return `<div class="flight">
+    <div><div class="airline"><span class="tail" style="background:${AIRLINE_COLOR[f.airline] || "#555"}">${esc(f.airline[0])}</span>${esc(f.airline)}</div><div class="muted" style="font-size:13px">${esc(f.fare_brand)} · ${dayName(f.depart_date)} ${shortDate(f.depart_date)}</div></div>
+    <div><div class="times"><div><div class="t">${esc(f.depart_time)}</div><div class="c">${esc(f.origin)} · ${esc(CITY_OF[f.origin] || "")}</div></div>
+      <div class="line"><span>${f.duration_hours}h · ${f.stops ? f.stops + " stop" : "nonstop"}</span></div>
+      <div style="text-align:right"><div class="t">${esc(f.destination)}</div><div class="c">${esc(CITY_OF[f.destination] || "")}</div></div></div>
+      <div class="tags"><span class="tag ${f.refundable ? "ok" : "warn"}">${f.refundable ? "Refundable" : "Non-refundable"}</span><span class="tag">${f.checked_bags} checked bag${f.checked_bags === 1 ? "" : "s"}</span><span class="tag">${f.seats_left} seat${f.seats_left === 1 ? "" : "s"} left</span><span class="tag">${esc(f.fare_id)}</span></div></div>
+    <div class="price"><b>${usd(f.price_usd_per_passenger)}</b><small>per traveller</small></div>
+  </div>`;
+}
+
+function stayCard(l) {
+  const s = l.stay;
+  if (!s) return `<div class="card"><b>${esc(l.city)}</b><p class="muted" style="margin:4px 0 0">${esc(l.check_in)} – ${esc(l.check_out || "?")}: no stay booked</p></div>`;
+  return `<div class="card tile"><div class="img" style="background:${art(s.name)}"><span class="rating">★ ${s.rating}</span><div><div>${esc(s.name)}</div><div class="where">${esc(s.neighbourhood)}, ${esc(l.city)}</div></div></div>
+    <div class="body"><div class="muted" style="font-size:13px">${esc(s.type)} · sleeps ${s.max_guests} · ${l.units} unit${l.units === 1 ? "" : "s"}</div>
+      <div style="font-size:13px">${icon("i-cal")} ${shortDate(l.check_in)} – ${shortDate(l.check_out)} · ${l.nights} night${l.nights === 1 ? "" : "s"}</div>
+      <div class="tags"><span class="tag ${/non-refundable/.test(s.cancellation) ? "warn" : "ok"}">${esc(s.cancellation)}</span></div>
+      <div class="bottom"><span class="muted" style="font-size:13px">${esc(s.stay_id)}</span><span><b>${usd(s.nightly_usd)}</b><span class="muted" style="font-size:13px"> / night</span></span></div></div></div>`;
+}
+
+function actCard(a) {
+  return `<div class="card tile"><div class="img" style="background:${art(a.name + a.category)};height:84px"><div><div>${esc(a.name)}</div><div class="where">${esc(a.area)}, ${esc(a.city)}</div></div></div>
+    <div class="body"><div class="tags"><span class="tag">${esc(a.category)}</span><span class="tag">${a.duration_hours}h</span>${a.closed_on?.length ? `<span class="tag warn">closed ${esc(a.closed_on.join(", "))}</span>` : ""}</div>
+      <div class="bottom"><span class="muted" style="font-size:13px">${esc(a.activity_id)}</span><span><b>${a.price_usd ? usd(a.price_usd) : "Free"}</b>${a.price_usd ? `<span class="muted" style="font-size:13px"> / person</span>` : ""}</span></div></div></div>`;
+}
+
+const WX_ICON = { sunny: "☀️", "partly cloudy": "⛅", cloudy: "☁️", rain: "🌧️", storm: "⛈️", snow: "🌨️" };
+function weatherCard(city, w, leg) {
+  const days = Object.values(w.days || {}).filter((d) => !leg || (d.date >= leg.check_in && d.date <= (leg.check_out || d.date))).sort((a, b) => a.date.localeCompare(b.date));
+  const normals = Object.values(w.normals || {});
+  let body = "";
+  if (days.length) body += `<div class="wx">${days.map((d) => `<div class="wxday ${d.severe ? "severe" : ""}"><div>${dayName(d.date)} ${shortDate(d.date)}</div><b aria-hidden="true">${WX_ICON[d.condition] || ""}</b><div>${esc(d.condition)}</div><div>${d.high_c}° / ${d.low_c}°</div>${d.severe ? `<div style="color:var(--bad)">severe</div>` : ""}</div>`).join("")}</div>`;
+  if (normals.length) body += normals.map((n) => `<div class="wxnorm"><span class="pill info">Typical for ${esc(n.month)}, not a forecast</span><span>${n.avg_high_c}° / ${n.avg_low_c}°</span><span>${n.rainy_days} rainy days</span><span>${n.daylight_hours}h daylight</span>${n.note ? `<span class="muted">${esc(n.note)}</span>` : ""}</div>`).join("");
+  if (!body) body = `<span class="muted">No weather fetched for these dates.</span>`;
+  return `<div class="card"><b>${esc(city)}</b>${leg ? ` <span class="muted" style="font-size:13px">${shortDate(leg.check_in)} – ${shortDate(leg.check_out || leg.check_in)}</span>` : ""}<div style="margin-top:8px">${body}</div></div>`;
+}
+
+function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|\W)_(.+?)_(?=\W|$)/g, "$1<em>$2</em>"); }
+function daysBlock(md) {
+  const plan = (md.split(/^## Plan\s*$/m)[1] || "").split(/^## /m)[0].trim();
+  if (!plan) return "";
+  const chunks = plan.split(/^### /m);
+  const preface = chunks.shift().trim();
+  const fallback = /could not be reached/.test(preface);
+  const days = chunks.map((c) => {
+    const [title, ...rest] = c.split("\n");
+    const m = /Day\s+(\d+)\s*[—–-]\s*\w+\.?\s+(\d{4}-\d{2}-\d{2})?\s*(?:·\s*(.*))?/.exec(title) || [];
+    const iso = m[2];
+    const lines = rest.join("\n").trim().split("\n").filter((x) => x.trim() && !/^---+$/.test(x.trim()));
+    const bullets = lines.filter((x) => /^\s*[-*]\s/.test(x)).map((x) => `<li>${inline(x.replace(/^\s*[-*]\s+/, ""))}</li>`).join("");
+    const paras = lines.filter((x) => !/^\s*[-*]\s/.test(x)).map((x) => `<p>${inline(x)}</p>`).join("");
+    const label = m[1] ? `Day ${esc(m[1])}${m[3] ? ` · ${esc(m[3])}` : ""}` : esc(title);
+    return `<div class="day"><div class="date">${iso ? `<small>${dayName(iso)}</small><b>${utc(iso).getUTCDate()}</b><small>${utc(iso).toLocaleDateString(undefined, { month: "short", timeZone: "UTC" })}</small>` : `<b>${esc(m[1] || "·")}</b>`}</div>
+      <div class="card" style="padding:12px 14px"><h3>${label}</h3>${paras}${bullets ? `<ul>${bullets}</ul>` : ""}</div></div>`;
+  }).join("");
+  return `<h2 class="sec">${icon("i-cal")} Day by day</h2>${fallback ? `<div class="fallback">The itinerary writer timed out, so the planner laid out these days itself from the verified bookings.</div>` : ""}<div class="days">${days}</div>`;
+}
+
+function priceCard(t) {
+  const pct = t.budget_usd ? Math.min(100, (t.total_usd / t.budget_usd) * 100) : 0;
+  const over = t.budget_usd && t.total_usd > t.budget_usd;
+  const label = (item) => item.replace(/^Flight FL-([A-Z]{3})-([A-Z]{3})-\d+-\d \(.*\)$/, "Flight $1 → $2").replace(/\s*\((?:ST|AC)-[A-Z]{3}-\d{2}\)/, "");
+  return `<b style="font-size:17px">Price summary</b>
+    <table class="lines" style="margin-top:8px">${t.cost_lines.map((l) => `<tr><td>${esc(label(l.item))}<div class="muted" style="font-size:12px">${usd(l.unit_usd)} × ${l.qty}</div></td><td>${usd(l.total_usd)}</td></tr>`).join("")}
+    <tr class="total"><td>Total</td><td>${usd(t.total_usd)}</td></tr></table>
+    ${t.budget_usd ? `<div class="meter ${over ? "over" : ""}"><i style="width:${pct}%"></i></div><div class="muted" style="font-size:13px">${over ? "Over" : "Within"} your ${usd(t.budget_usd)} budget${over ? "" : ` · ${usd(t.budget_usd - t.total_usd)} to spare`}</div>` : ""}`;
+}
+
+function checkoutCard(v) {
+  const b = v.booking, t = v.trip;
+  if (b?.booking?.status === "confirmed") {
+    const rec = v.booking_record;
+    return `<h3 style="color:var(--ok)">${icon("i-check")} Booked</h3><div class="muted" style="font-size:13px">Booking <b>${esc(b.booking.booking_id)}</b> · ${usd(b.booking.total_usd)}</div>
+      ${rec ? `<table class="codes">${rec.items.map((i) => `<tr><td>${esc(i.description)}</td><td>${esc(i.confirmation)}</td></tr>`).join("")}</table>` : ""}
+      <button class="cta danger" type="button" data-say="Please cancel booking ${esc(b.booking.booking_id)}. What would I get back?">Cancel booking…</button>
+      <p class="muted" style="font-size:12px;margin:8px 0 0">You'll see the refund first and confirm in a separate message.</p>`;
+  }
+  if (b?.booking?.status === "cancelled") {
+    const c = v.cancellation_record;
+    return `<h3>Cancelled</h3><div class="muted" style="font-size:13px">Booking ${esc(b.booking.booking_id)} · refunded <b>${usd(c?.refund_usd ?? b.booking.refund_usd)}</b>${c?.non_refundable_usd ? ` · ${usd(c.non_refundable_usd)} non-refundable` : ""}</div>`;
+  }
+  if (b?.hold?.status === "held") {
+    return `<h3>On hold</h3><div class="muted" style="font-size:13px">Hold <b>${esc(b.hold.hold_id)}</b> · ${usd(b.hold.total_usd)} · nothing charged</div>
+      <div style="margin-top:6px;font-size:14px">Expires in <span class="countdown" id="countdown" data-exp="${esc(b.hold.expires_at)}">--:--</span></div>
+      <button class="cta" type="button" data-say="Yes, I confirm. Please book hold ${esc(b.hold.hold_id)}.">Confirm &amp; book · ${usd(b.hold.total_usd)}</button>`;
+  }
+  if (b?.hold?.status === "expired") {
+    return `<h3>Hold expired</h3><p class="muted" style="margin:0;font-size:13px">Nothing was charged.</p><button class="cta brand" type="button" data-say="The hold expired. Please hold the trip again.">Hold again</button>`;
+  }
+  if (t && !t.problems?.length) {
+    return `<h3>Ready to book</h3><p class="muted" style="margin:0;font-size:13px">Hold the whole trip free for 30 minutes, then confirm.</p>
+      <button class="cta" type="button" data-say="Please hold this trip.">Hold this trip · ${usd(t.total_usd)}</button>`;
+  }
+  return `<h3>Checkout</h3><p class="muted" style="margin:0;font-size:13px">${t?.problems?.length ? "Fix the problems above before booking." : "You can book once there's a verified plan."}</p>`;
+}
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  const el = $("countdown"); if (!el) return;
+  const tick = () => {
+    const left = Math.max(0, Date.parse(el.dataset.exp) - Date.now());
+    el.textContent = left ? `${Math.floor(left / 60000)}:${String(Math.floor(left / 1000) % 60).padStart(2, "0")}` : "expired";
+    if (!left) clearInterval(countdownTimer);
+  };
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+// Buttons and the chat send ordinary messages; the planner and the booking desk decide.
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-say]"); if (!b || running || !sid) return;
+  send(b.dataset.say);
+});
+$("chat").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = $("chatText").value.trim(); if (!t || !sid) return;
+  $("chatText").value = "";
+  send(t);
+});
+
+// ---- start --------------------------------------------------------------------------
+renderLanes();
+clearTrace();
+fill(IDEAS[0].fill);
+const fromHash = /#trip=([A-Za-z0-9._-]+)/.exec(location.hash);
+if (fromHash) openTrip(fromHash[1]);
+</script>
+</body>
+</html>

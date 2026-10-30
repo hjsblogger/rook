@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "flights": { "command": "node", "args": ["mcp/flights-server.mjs"] },
+    "stays": { "command": "node", "args": ["mcp/stays-server.mjs"] },
+    "destinations": { "command": "node", "args": ["mcp/destinations-server.mjs"] },
+    "weather": { "command": "node", "args": ["mcp/weather-server.mjs"] },
+    "bookings": { "command": "node", "args": ["mcp/bookings-server.mjs"] }
+  }
+}
